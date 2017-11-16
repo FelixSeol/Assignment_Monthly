@@ -86,7 +86,7 @@ public class GPSTracker extends Service implements LocationListener {
                     }
 
                 }
-                if(size < 7) {
+                if(size < 16) {
                     inBuilding = true;
                 }else{
                     inBuilding = false;
@@ -101,6 +101,8 @@ public class GPSTracker extends Service implements LocationListener {
                         sendString("GPS_EVENT_FIRST_FIX"+" : "+"count gpss : "+size + " in Building : " + inBuilding);
                         break;
                     case GpsStatus.GPS_EVENT_SATELLITE_STATUS:
+                        Toast.makeText(mContext, "In Building!"+" gpss size : "+size+" accuracy : "+accuracy, Toast.LENGTH_SHORT).show();
+
                         sendString("GPS_EVENT_SATELLITE_STATUS"+" : "+"count gpss : "+size + " in Building : " + inBuilding);
                         break;
                 }
@@ -262,7 +264,7 @@ public class GPSTracker extends Service implements LocationListener {
         if(location != null){
             double latitude= location.getLatitude();
             double longitude = location.getLongitude();
-            double accuracy = location.getAccuracy();
+            accuracy = location.getAccuracy();
             //Toast.makeText(mContext, "onLocationChanged is - \nLat: " + latitude + "\nLong: " + longitude, Toast.LENGTH_SHORT).show();
             sendString("onLocationChanged is - \nLat: " + latitude + "\nLong: " + longitude + " provider:"+location.getProvider()+ " acc : "+accuracy);
         }
