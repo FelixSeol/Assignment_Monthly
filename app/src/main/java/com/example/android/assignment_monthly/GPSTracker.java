@@ -3,13 +3,15 @@ package com.example.android.assignment_monthly;
 /**
  * Created by felixseol on 2017-11-04.
  */
-import android.Manifest;
+
 import android.app.AlertDialog;
 import android.app.Service;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.location.GpsSatellite;
+import android.location.GpsStatus;
 import android.location.Location;
 import android.location.LocationListener;
 import android.location.LocationManager;
@@ -19,12 +21,13 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.provider.Settings;
-import android.support.v4.app.ActivityCompat;
+import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.Toast;
 
-import java.util.ArrayList;
+import java.util.Iterator;
+import java.util.List;
 import java.util.Set;
 
 public class GPSTracker extends Service implements LocationListener {
@@ -40,10 +43,13 @@ public class GPSTracker extends Service implements LocationListener {
     // flag for GPS status
     boolean canGetLocation = false;
 
-    ArrayList<Location> locations = new ArrayList<Location>();
+    Iterator<GpsSatellite> gpss;
+
     Location location; // location
     double latitude; // latitude
     double longitude; // longitude
+    double accuracy;
+
 
     // The minimum distance to change Updates in meters
     private static final long MIN_DISTANCE_CHANGE_FOR_UPDATES = 1; // 10 meters
@@ -59,11 +65,52 @@ public class GPSTracker extends Service implements LocationListener {
     public GPSTracker(Context context, Handler handler) {
         this.mContext = context;
         this.mHandler = handler;
+
         getLocation();
     }
     public void Update(){
         getLocation();
     }
+    private final GpsStatus.Listener gpsStatusListener = new GpsStatus.Listener() {
+        @Override
+        public void onGpsStatusChanged(int i) {
+            try{
+                GpsStatus gpsStatus = locationManager.getGpsStatus(null);
+                gpss = gpsStatus.getSatellites().iterator();
+                int size = 0;
+                boolean inBuilding = false;
+                while(gpss.hasNext()){
+                    GpsSatellite satellite = gpss.next();
+                    if(satellite.usedInFix()){
+                        size++;
+                    }
+
+                }
+                if(size < 7) {
+                    inBuilding = true;
+                }else{
+                    inBuilding = false;
+                }
+                switch(i){
+                    case GpsStatus.GPS_EVENT_STARTED:
+                        sendString("GPS_EVENT_STARTED" + " : " + "count gpss : " + size + " in Building : " + inBuilding);
+                        break;
+                    case GpsStatus.GPS_EVENT_STOPPED:
+                        break;
+                    case GpsStatus.GPS_EVENT_FIRST_FIX:
+                        sendString("GPS_EVENT_FIRST_FIX"+" : "+"count gpss : "+size + " in Building : " + inBuilding);
+                        break;
+                    case GpsStatus.GPS_EVENT_SATELLITE_STATUS:
+                        sendString("GPS_EVENT_SATELLITE_STATUS"+" : "+"count gpss : "+size + " in Building : " + inBuilding);
+                        break;
+                }
+
+            }catch(SecurityException e){
+                e.printStackTrace();
+            }
+
+        }
+    };
     public Location getLocation() {
 
         if ( Build.VERSION.SDK_INT >= 23 &&
@@ -73,7 +120,7 @@ public class GPSTracker extends Service implements LocationListener {
         try {
             locationManager = (LocationManager) mContext
                     .getSystemService(LOCATION_SERVICE);
-
+            locationManager.addGpsStatusListener(gpsStatusListener);
             // getting GPS status
             isGPSEnabled = locationManager
                     .isProviderEnabled(LocationManager.GPS_PROVIDER);
@@ -113,8 +160,9 @@ public class GPSTracker extends Service implements LocationListener {
                         if (locationManager != null) {
                             location = locationManager
                                     .getLastKnownLocation(LocationManager.GPS_PROVIDER);
+
                             if (location != null) {
-                                locations.add(location);
+                                accuracy = location.getAccuracy();
                                 latitude = location.getLatitude();
                                 longitude = location.getLongitude();
                             }
@@ -168,6 +216,7 @@ public class GPSTracker extends Service implements LocationListener {
         return longitude;
     }
 
+
     /**
      * Function to check GPS/wifi enabled
      * @return boolean
@@ -213,16 +262,17 @@ public class GPSTracker extends Service implements LocationListener {
         if(location != null){
             double latitude= location.getLatitude();
             double longitude = location.getLongitude();
+            double accuracy = location.getAccuracy();
             //Toast.makeText(mContext, "onLocationChanged is - \nLat: " + latitude + "\nLong: " + longitude, Toast.LENGTH_SHORT).show();
-            sendString("onLocationChanged is - \nLat: " + latitude + "\nLong: " + longitude + " provider:"+location.getProvider()+" dist:"+location.distanceTo(locations.get(locations.size()-1)));
+            sendString("onLocationChanged is - \nLat: " + latitude + "\nLong: " + longitude + " provider:"+location.getProvider()+ " acc : "+accuracy);
         }
     }
 
     @Override
     public void onProviderDisabled(String provider) {
-        //Toast.makeText(mContext, "onProviderDisabled " + provider, Toast.LENGTH_SHORT).show();
+        Toast.makeText(mContext, "onProviderDisabled " + provider + "In Building", Toast.LENGTH_SHORT).show();
         mHandler.sendEmptyMessage(MainActivity.RENEW_GPS);
-        sendString( "onProviderDisabled " + provider);
+        sendString( "onProviderDISABLED " + provider);
     }
 
     @Override
@@ -237,6 +287,7 @@ public class GPSTracker extends Service implements LocationListener {
         //Toast.makeText(mContext, "onStatusChanged " + provider + " : " + status, Toast.LENGTH_SHORT).show();
         mHandler.sendEmptyMessage(MainActivity.RENEW_GPS);
         sendString("onStatusChanged " + provider + " : " + status + ":" + printBundle(extras));
+
     }
 
     @Override
