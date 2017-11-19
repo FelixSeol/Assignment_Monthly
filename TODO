@@ -1,0 +1,30 @@
+TODO
+
+GPS Status Start -> first fix 
+ /*	currentTimeMills() Inbuilding과 OutBuilding 스타트 잡는다. */
+-- 1초, 1m -- 
+size 비교
+	밖에서 시작했을때 fix 이후 max satellites num 갯수 평균내기 : 10회
+	size : 18, 18, 18, 20, 20, 19, 19, 18, 19, 19
+	accu :       , 6 , 8,  6 , 6 , 6 , 4 , 4 , 4
+	들어왔을때 " "
+	size : 14, 12, 11, 13, 12, 14, 13, 14, 13, 14
+	accu :       , 16, 12, 8 , 12, 8 , 12, 8 , 8
+
+**매초확인할수 있다면 사이즈감소, accu등으로 즉각적인 판별가능
+
+-- 30ch, 
+
+-- 30초, 10m --
+size 비교
+
+
+next job :
+	OutNum 
+delta size 비교
+	밖에서 평균 size와 들어왔을때 평균size의 delta 평균내기 : 10회
+	안에서 평균 size와 나갔을때 평균size의 delta 평균내기 : 10회
+
+
+
+// 0000000이후 accuracy 터지는 케이스.

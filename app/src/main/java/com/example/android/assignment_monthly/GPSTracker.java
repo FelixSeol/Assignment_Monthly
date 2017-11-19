@@ -21,13 +21,11 @@ import android.os.Handler;
 import android.os.IBinder;
 import android.os.Message;
 import android.provider.Settings;
-import android.support.annotation.NonNull;
 import android.support.v4.content.ContextCompat;
 import android.util.Log;
 import android.widget.Toast;
 
 import java.util.Iterator;
-import java.util.List;
 import java.util.Set;
 
 public class GPSTracker extends Service implements LocationListener {
@@ -94,6 +92,7 @@ public class GPSTracker extends Service implements LocationListener {
                 switch(i){
                     case GpsStatus.GPS_EVENT_STARTED:
                         sendString("GPS_EVENT_STARTED" + " : " + "count gpss : " + size + " in Building : " + inBuilding);
+
                         break;
                     case GpsStatus.GPS_EVENT_STOPPED:
                         break;
